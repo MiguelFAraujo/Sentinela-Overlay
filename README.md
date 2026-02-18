@@ -1,49 +1,85 @@
-# Overlay Pop-Up – Sentinela
+# 🛡️ Sentinela Pro v1.02
 
-Sistema de overlay inteligente desenvolvido em Python, com HUD persistente,
-gerenciamento de estado via JSON e empacotamento em executável Windows.
+**Overlay de Monitoramento Avançado com Integração AI Local (Ollama/Qwen)**
 
-## 🚀 Funcionalidades
-- Overlay flutuante
-- Persistência de memória (JSON)
-- HUD interativo (PyQt6)
-- Build em .exe com PyInstaller
+O **Sentinela Pro** é um HUD (Heads-Up Display) flutuante para Windows que monitora hardware em tempo real (CPU, RAM, GPU) e conecta-se a uma Inteligência Artificial local para análise de contexto e assistência.
 
-## 📦 Requisitos
-- Python 3.10+
-- Windows
+![Badge](https://img.shields.io/badge/Status-Active-brightgreen) ![Python](https://img.shields.io/badge/Python-3.10%2B-blue) ![Ollama](https://img.shields.io/badge/AI-Ollama-orange)
 
-## 🔧 Instalação
-```bash
-python -m venv .venv
-.venv\Scripts\activate
-pip install -r requirements.txt
-```
+## 🚀 Novidades v1.02
+- **Integração Real com Ollama**: O status "AI" agora reflete a conexão real com o serviço Ollama local.
+- **Suporte ao Qwen 2.5**: Configurado por padrão para usar o modelo `qwen2.5:7b` para performance e precisão.
+- **Otimizações**: Redução de uso de CPU no monitoramento.
+- **Instalador Corrigido**: Falha de caminho _MEIPASS resolvida.
 
-## ▶️ Execução
-```bash
-python sentinela_hud.py
-```
+## 📋 Pré-requisitos
 
-## 🏗️ Build
+1. **Python 3.10+** (para rodar código fonte)
+2. **Ollama**: Necessário para a funcionalidade de IA.
+   - Baixe em: [ollama.com](https://ollama.com)
+   - Instale e execute.
+   - Baixe o modelo recomendado:
+     ```powershell
+     ollama pull qwen2.5:7b
+     ```
+
+## 🔧 Instalação e Execução
+
+### Rodando o Executável (Usuário Final)
+1. Baixe o instalador `Sentinela Setup.exe` (ou descompacte a pasta `dist`).
+2. Execute o instalador.
+3. O Sentinela iniciará automaticamente.
+4. **Nota**: Certifique-se de que o Ollama está rodando (`ollama serve` ou via systray).
+
+### Rodando do Código Fonte (Desenvolvedor)
+1. Clone o repositório:
+   ```bash
+   git clone https://github.com/MiguelFAraujo/Sentinela-Overlay.git
+   cd Sentinela-Overlay
+   ```
+2. Crie um ambiente virtual:
+   ```bash
+   python -m venv .venv
+   .venv\Scripts\activate
+   ```
+3. Instale as dependências:
+   ```bash
+   pip install -r requirements.txt
+   ```
+4. Execute:
+   ```bash
+   python sentinela_hud.py
+   ```
+
+## 🏗️ Build (Criar Executável)
+
+Para gerar o `.exe` standalone:
+
 ```bash
 pyinstaller "Sentinela Pro.spec"
 ```
-O executável será gerado na pasta `dist/`.
+O arquivo será gerado em `dist/Sentinela Pro/`.
 
-## 📁 Estrutura
-- `brain/`: Lógica central (mock)
-- `sentinela_hud.py`: Entry point da aplicação
-- `memory.json`: Persistência de dados
-- `sentinela_config.json`: Configurações do HUD
+## ⚙️ Configuração
+O arquivo `sentinela_config.json` permite ajustes finos:
+```json
+{
+    "theme": "dark",
+    "transparency": 150,
+    "llm_model": "qwen2.5:7b" 
+}
+```
+* **llm_model**: Nome do modelo Ollama a ser usado.
 
-## ⚠️ Observações
-Não subir `.venv`, `build` ou arquivos temporários para o repositório.
+## 📁 Estrutura do Projeto
+* `sentinela_hud.py`: Entry point e lógica da interface gráfica.
+* `brain/`: Pacote contendo lógica de inteligência.
+  * `llm.py`: Cliente de conexão com Ollama.
+* `setup_wizard.py`: Script criador do instalador.
+* `Sentinela Pro.spec`: Especificação de build PyInstaller.
 
-## 👨‍💻 Sobre o Autor
-Desenvolvido por **Miguel Araújo**.
+## 🤝 Contribuição
+Sinta-se livre para abrir Issues ou Pull Requests.
 
-Este projeto nasceu da necessidade de criar uma ferramenta de **Overaly e HUD (Heads-Up Display)** leve, eficiente e independente, focado em **monitoramento em tempo real** e **segurança defensiva (EDR)**. A ideia é ter um "Sentinela" digital sempre ativo, garantindo visibilidade e controle sem impactar a performance do sistema.
-
-📧 **Contato:** [LinkedIn](https://www.linkedin.com/in/miguel-araujo/) *(Insira seu link real aqui se for diferente)*
-🔗 **Portfólio:** [GitHub](https://github.com/MiguelFAraujo)
+---
+**Desenvolvido por Miguel Araujo**

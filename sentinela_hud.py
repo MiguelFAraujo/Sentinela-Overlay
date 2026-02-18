@@ -4,6 +4,7 @@ import subprocess
 from pathlib import Path
 from PyQt6.QtWidgets import QApplication, QWidget, QLabel, QVBoxLayout
 from PyQt6.QtCore import Qt, QTimer, QThread, pyqtSignal
+from brain.llm import OllamaClient
 
 # --- Configuração de Caminhos ---
 BASE_DIR = Path(__file__).resolve().parent
@@ -78,15 +79,37 @@ class HardwareMonitor(QThread):
         except Exception as e:
             print(f"Erro monitoramento: {e}")
 
+class AIStatusMonitor(QThread):
+    status_updated = pyqtSignal(bool, str)
+
+    def __init__(self, model_name):
+        super().__init__()
+        self.model_name = model_name
+        self.client = OllamaClient(model=model_name)
+
+    def run(self):
+        is_running = self.client.is_running()
+        if is_running:
+            # Opcional: Verificar se o modelo específico está baixado
+            # model_ready = self.client.is_model_available()
+            self.status_updated.emit(True, f"Ollama Online ({self.model_name})")
+        else:
+            self.status_updated.emit(False, "Ollama Offline")
+
 class SentinelaHUD(QWidget):
     def __init__(self):
         super().__init__()
-        self.config = load_json(CONFIG_FILE, {"theme": "dark", "transparency": 150})
+        self.config = load_json(CONFIG_FILE, {"theme": "dark", "transparency": 150, "llm_model": "qwen2.5:7b"})
         self.initUI()
         
-        # Thread worker
+        # Thread worker Hardware
         self.monitor_thread = HardwareMonitor()
-        self.monitor_thread.stats_updated.connect(self.update_ui)
+        self.monitor_thread.stats_updated.connect(self.update_stats)
+        
+        # Thread worker AI
+        self.ai_status = "Verificando..."
+        self.ai_thread = AIStatusMonitor(self.config.get("llm_model", "qwen2.5:7b"))
+        self.ai_thread.status_updated.connect(self.update_ai_status)
         
     def initUI(self):
         # Janela sem bordas, sempre no topo e transparente
@@ -104,24 +127,39 @@ class SentinelaHUD(QWidget):
         self.setLayout(layout)
         
         # Posiciona no canto superior direito
-        self.setGeometry(10, 50, 220, 100)
+        self.setGeometry(10, 50, 220, 110) # Altura ajustada
         
-        # Timer para disparar a thread
-        self.timer = QTimer()
-        self.timer.timeout.connect(self.monitor_thread.start)
-        self.timer.start(3000) # Otimizado: 3s para evitar sobrecarga de CPU
+        # Timers
+        self.timer_hw = QTimer()
+        self.timer_hw.timeout.connect(self.monitor_thread.start)
+        self.timer_hw.start(3000) 
 
-    def update_ui(self, stats):
-        cpu = stats.get('CPU', 0)
-        ram_used = stats.get('RAM_Used', 0)
-        ram_total = stats.get('RAM_Total', 0)
-        gpu = stats.get('GPU', 'N/A')
+        self.timer_ai = QTimer()
+        self.timer_ai.timeout.connect(self.ai_thread.start)
+        self.timer_ai.start(10000) # Checa AI a cada 10s
+        self.ai_thread.start() # Checa imediatamente
+
+        self.last_stats = {}
+
+    def update_stats(self, stats):
+        self.last_stats = stats
+        self.refresh_ui()
+    
+    def update_ai_status(self, online, message):
+        self.ai_status = message if online else "⚠️ AI Offline"
+        self.refresh_ui()
+
+    def refresh_ui(self):
+        cpu = self.last_stats.get('CPU', 0)
+        ram_used = self.last_stats.get('RAM_Used', 0)
+        ram_total = self.last_stats.get('RAM_Total', 0)
+        gpu = self.last_stats.get('GPU', 'N/A')
         
         status_text = f"🛡️ Sentinela: VIGILANTE\n" \
                       f"🔥 CPU: {cpu}%\n" \
                       f"🧠 RAM: {ram_used}GB / {ram_total}GB\n" \
                       f"🎮 GPU: {gpu}\n" \
-                      f"🤖 AI: Online"
+                      f"🤖 AI: {self.ai_status}"
                       
         self.label.setText(status_text)
         
@@ -130,6 +168,5 @@ def main():
     hud = SentinelaHUD()
     hud.show()
     sys.exit(app.exec())
-
 if __name__ == '__main__':
     main()

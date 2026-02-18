@@ -1,8 +1,5 @@
 PyQt6
 requests
-mcp
-fastapi
-uvicorn
 psutil
 pyinstaller
 winshell
