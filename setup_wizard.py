@@ -43,19 +43,24 @@ class OllamaCheckThread(QThread):
 class IntroPage(QWizardPage):
     def __init__(self):
         super().__init__()
-        self.setTitle("Bem-vindo ao Instalador do Sentinela Pro v1.01")
+        self.setTitle("Bem-vindo ao Instalador do Sentinela Pro v1.02")
         self.setSubTitle("Guia de instalação do Sentinela Pro com Monitoramento Profundo.")
         
         layout = QVBoxLayout()
-        label = QLabel("O Sentinela Pro v1.01 é uma ferramenta de EDR e monitoramento avançado.\n\n"
-                       "🚀 NOVIDADES v1.01:\n"
-                       "- Monitoramento profundo de Hardware (CPU/RAM/GPU) via PowerShell Kernel.\n"
-                       "- Otimização de performance e redução de consumo.\n\n"
+        label = QLabel("O Sentinela Pro v1.02 é uma ferramenta de EDR e monitoramento avançado.\n\n"
+                       "🚀 NOVIDADES v1.02:\n"
+                       "- CORREÇÃO CRÍTICA: Erro de caminho na instalação corrigido.\n"
+                       "- Otimização de monitoramento de hardware.\n\n"
                        "⚠️ REQUISITO OBRIGATÓRIO: OLLAMA\n"
                        "Verificaremos se o serviço Ollama está ativo na porta 11434.")
         label.setWordWrap(True)
         layout.addWidget(label)
         self.setLayout(layout)
+
+# ... (LicensePage and PreRequisitePage skipped for brevity in this replace call if context permits, 
+# but simply targeting the InstallPage logic is better split if IntroPage is far away. 
+# I will supply the IntroPage update here and do the InstallPage fix in a separate chunk or same tool call if contiguous enough.
+# They are far apart. I'll do IntroPage first).
 
 class LicensePage(QWizardPage):
     def __init__(self):
@@ -159,12 +164,13 @@ class InstallPage(QWizardPage):
             INSTALL_DIR.mkdir(parents=True, exist_ok=True)
             
             # Copiar arquivos
-            # NOTA: Ajuste o source conforme onde o PyInstaller gera (dist/Sentinela Pro)
-            src = Path("dist/Sentinela Pro") 
+            # Usa SOURCE_DIR que já resolve o caminho correto (_MEIPASS ou dist)
+            src = SOURCE_DIR
+            
             if not src.exists():
-                raise FileNotFoundError(f"Arquivos de origem não encontrados em {src.absolute()}")
+                raise FileNotFoundError(f"Arquivos de origem não encontrados em {src.absolute()}\n(Esperado: {SOURCE_DIR})")
 
-            self.label.setText("Copiando executável e recursos...")
+            self.label.setText(f"Copiando de: {src.name}...")
             # Copia recursiva
             shutil.copytree(src, INSTALL_DIR, dirs_exist_ok=True)
             self.progress.setValue(70)

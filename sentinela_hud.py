@@ -94,7 +94,7 @@ class SentinelaHUD(QWidget):
         self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
         
         layout = QVBoxLayout()
-        self.label = QLabel("🛡️ Sentinela v1.01\nCarregando...")
+        self.label = QLabel("🛡️ Sentinela v1.02\nCarregando...")
         
         # Estilo visual baseado na config
         transparency = self.config.get("transparency", 150)
@@ -109,7 +109,7 @@ class SentinelaHUD(QWidget):
         # Timer para disparar a thread
         self.timer = QTimer()
         self.timer.timeout.connect(self.monitor_thread.start)
-        self.timer.start(2000) # Atualiza a cada 2 segundos (Hardware é pesado)
+        self.timer.start(3000) # Otimizado: 3s para evitar sobrecarga de CPU
 
     def update_ui(self, stats):
         cpu = stats.get('CPU', 0)
