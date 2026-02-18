@@ -5,3 +5,5 @@ fastapi
 uvicorn
 psutil
 pyinstaller
+winshell
+pypiwin32
