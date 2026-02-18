@@ -39,3 +39,11 @@ O executável será gerado na pasta `dist/`.
 
 ## ⚠️ Observações
 Não subir `.venv`, `build` ou arquivos temporários para o repositório.
+
+## 👨‍💻 Sobre o Autor
+Desenvolvido por **Miguel Araújo**.
+
+Este projeto nasceu da necessidade de criar uma ferramenta de **Overaly e HUD (Heads-Up Display)** leve, eficiente e independente, focado em **monitoramento em tempo real** e **segurança defensiva (EDR)**. A ideia é ter um "Sentinela" digital sempre ativo, garantindo visibilidade e controle sem impactar a performance do sistema.
+
+📧 **Contato:** [LinkedIn](https://www.linkedin.com/in/miguel-araujo/) *(Insira seu link real aqui se for diferente)*
+🔗 **Portfólio:** [GitHub](https://github.com/MiguelFAraujo)
