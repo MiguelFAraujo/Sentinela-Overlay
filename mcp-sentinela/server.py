@@ -1,19 +1,7 @@
 from mcp.server.fastmcp import FastMCP
 import psutil
 import os
-import sqlite3
-import datetime
-
-# Database path configuration
-# Priority: 
-# 1. Environment Variable 'SENTINELA_DB_PATH'
-# 2. Local 'db.sqlite3'
-# 3. Hardcoded Default (for current user setup)
-DEFAULT_DB_PATH = r"c:\Users\nigel\OneDrive\Documentos\WhatsApp-agent\db.sqlite3"
-DB_PATH = os.getenv("SENTINELA_DB_PATH", DEFAULT_DB_PATH)
-
-if not os.path.exists(DB_PATH) and os.path.exists("db.sqlite3"):
-    DB_PATH = "db.sqlite3"
+import subprocess
 
 # Create the MCP server with the project name
 mcp = FastMCP("Sentinela Hub")
@@ -41,51 +29,23 @@ def ping_maker_devices(device_ip: str):
     return "Dispositivo ONLINE 📡" if response == 0 else "Dispositivo OFFLINE ⚠️"
 
 @mcp.tool()
-def get_recent_whatsapp_summary():
-    """Lê as últimas 10 conversas do banco de dados Django (WhatsApp) e retorna um resumo."""
+def run_powershell(command: str):
+    """Executa um comando direto no PowerShell do Windows."""
     try:
-        if not os.path.exists(DB_PATH):
-            return f"❌ Erro: O arquivo do banco de dados não foi encontrado em {DB_PATH}"
-
-        conn = sqlite3.connect(DB_PATH)
-        cursor = conn.cursor()
-
-        # Query to fetch the last 10 messages from ChatHistory
-        # Adjust table name 'whatsapp_gateway_chathistory' if needed based on app name
-        query = """
-            SELECT sender, original_message, ai_response, timestamp 
-            FROM whatsapp_gateway_chathistory 
-            ORDER BY timestamp DESC 
-            LIMIT 10
-        """
-        cursor.execute(query)
-        rows = cursor.fetchall()
-        conn.close()
-
-        if not rows:
-            return "📭 Nenhuma conversa recente encontrada no banco de dados."
-
-        summary = ["📋 **Resumo das Últimas 10 Conversas do WhatsApp:**\n"]
-        for row in rows:
-            sender, message, response, timestamp = row
-            # Format timestamp for better readability
-            try:
-                dt = datetime.datetime.fromisoformat(timestamp)
-                time_str = dt.strftime("%Y-%m-%d %H:%M")
-            except:
-                time_str = str(timestamp)
-            
-            summary.append(f"- **{time_str}** | {sender}: {message[:50]}... -> IA: {response[:50]}..." if response else f"- **{time_str}** | {sender}: {message[:50]}...")
-
-        return "\n".join(summary)
-
-    except sqlite3.Error as e:
-        return f"❌ Erro ao acessar o banco de dados: {e}"
+        # Security Note: This allows arbitrary command execution.
+        result = subprocess.run(["powershell", "-Command", command], capture_output=True, text=True, timeout=30)
+        output = result.stdout.strip()
+        error = result.stderr.strip()
+        
+        if result.returncode == 0:
+            return f"✅ Sucesso:\n{output}"
+        else:
+            return f"❌ Erro (Código {result.returncode}):\n{error}\nOutput:\n{output}"
     except Exception as e:
-        return f"❌ Erro inesperado: {e}"
+        return f"❌ Falha na execução: {e}"
 
 # Auto-update configuration
-CURRENT_VERSION = "1.0.0"
+CURRENT_VERSION = "1.1.0"
 GITHUB_REPO_URL = "https://raw.githubusercontent.com/MiguelFAraujo/Sentinela-Overlay/main/mcp-sentinela"
 VERSION_URL = f"{GITHUB_REPO_URL}/version.txt"
 EXE_URL = f"{GITHUB_REPO_URL}/SentinelaHub.exe"
