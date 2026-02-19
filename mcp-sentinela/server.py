@@ -4,9 +4,16 @@ import os
 import sqlite3
 import datetime
 
-# Database path for WhatsApp Agent
-# Verify this path is correct based on your setup
-DB_PATH = r"c:\Users\nigel\OneDrive\Documentos\WhatsApp-agent\db.sqlite3"
+# Database path configuration
+# Priority: 
+# 1. Environment Variable 'SENTINELA_DB_PATH'
+# 2. Local 'db.sqlite3'
+# 3. Hardcoded Default (for current user setup)
+DEFAULT_DB_PATH = r"c:\Users\nigel\OneDrive\Documentos\WhatsApp-agent\db.sqlite3"
+DB_PATH = os.getenv("SENTINELA_DB_PATH", DEFAULT_DB_PATH)
+
+if not os.path.exists(DB_PATH) and os.path.exists("db.sqlite3"):
+    DB_PATH = "db.sqlite3"
 
 # Create the MCP server with the project name
 mcp = FastMCP("Sentinela Hub")
@@ -76,6 +83,56 @@ def get_recent_whatsapp_summary():
         return f"❌ Erro ao acessar o banco de dados: {e}"
     except Exception as e:
         return f"❌ Erro inesperado: {e}"
+
+# Auto-update configuration
+CURRENT_VERSION = "1.0.0"
+GITHUB_REPO_URL = "https://raw.githubusercontent.com/MiguelFAraujo/Sentinela-Overlay/main/mcp-sentinela"
+VERSION_URL = f"{GITHUB_REPO_URL}/version.txt"
+EXE_URL = f"{GITHUB_REPO_URL}/SentinelaHub.exe"
+
+@mcp.tool()
+def check_and_update_server():
+    """Verifica se há atualizações disponíveis e aplica automaticamente."""
+    try:
+        import requests
+        import sys
+        
+        # Check remote version
+        response = requests.get(VERSION_URL)
+        if response.status_code != 200:
+            return f"❌ Erro ao verificar atualizações: HTTP {response.status_code}"
+        
+        remote_version = response.text.strip()
+        
+        if remote_version == CURRENT_VERSION:
+            return f"✅ O servidor está atualizado (Versão {CURRENT_VERSION})."
+        
+        # Update available
+        if getattr(sys, 'frozen', False):
+            # Running as executable
+            current_exe = sys.executable
+            old_exe = current_exe + ".old"
+            
+            # Rename current executable
+            if os.path.exists(old_exe):
+                os.remove(old_exe)
+            os.rename(current_exe, old_exe)
+            
+            # Download new executable
+            return_msg = f"⬇️ Atualizando de {CURRENT_VERSION} para {remote_version}..."
+            
+            with requests.get(EXE_URL, stream=True) as r:
+                r.raise_for_status()
+                with open(current_exe, 'wb') as f:
+                    for chunk in r.iter_content(chunk_size=8192):
+                        f.write(chunk)
+            
+            return f"{return_msg}\n✅ Atualização concluída! Reinicie o servidor para aplicar."
+        else:
+            return f"⚠️ Atualização disponível ({remote_version}), mas não pode ser aplicada em modo script. Faça um 'git pull'."
+
+    except Exception as e:
+        return f"❌ Falha na atualização: {e}"
 
 if __name__ == "__main__":
     mcp.run()
